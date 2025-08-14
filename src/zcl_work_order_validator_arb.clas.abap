@@ -27,10 +27,7 @@ CLASS zcl_work_order_validator_arb DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS: c_valid_st_pe  TYPE c LENGTH 2 VALUE 'PE',
-               c_valid_st_co  TYPE c LENGTH 2 VALUE 'CO',
-               c_valid_prio_a TYPE c LENGTH 1 VALUE 'A',
-               c_valid_prio_b TYPE c LENGTH 1 VALUE 'B'.
+    CONSTANTS: c_valid_st_pe  TYPE c LENGTH 2 VALUE 'PE'.
 
 ENDCLASS.
 
