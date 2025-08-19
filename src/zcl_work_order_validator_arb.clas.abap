@@ -20,7 +20,7 @@ CLASS zcl_work_order_validator_arb DEFINITION
       validate_status_and_priority IMPORTING iv_status       TYPE zde_status_code_arb
                                              iv_priority     TYPE zde_priority_code_arb
                                    RETURNING VALUE(rv_valid) TYPE abap_bool,
-      validate_authority  IMPORTING iv_work_order_id TYPE zde_status_code_arb
+      validate_authority  IMPORTING iv_work_order_id TYPE zde_work_orderid_arb
                                     iv_actvt         TYPE c
                           RETURNING VALUE(rv_valid)  TYPE abap_bool.
 
@@ -32,7 +32,26 @@ CLASS zcl_work_order_validator_arb DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_work_order_validator_arb IMPLEMENTATION.
+
+CLASS ZCL_WORK_ORDER_VALIDATOR_ARB IMPLEMENTATION.
+
+
+  METHOD validate_authority.
+
+    AUTHORITY-CHECK OBJECT 'ZAO_WO'
+    ID 'ZAF_WO' FIELD iv_work_order_id
+    ID 'ACTVT'  FIELD iv_actvt.
+
+    IF sy-subrc EQ 0.
+      rv_valid = abap_true.
+      EXIT.
+    ELSE.
+      rv_valid = abap_false.
+      EXIT.
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD validate_create_order.
 
@@ -68,24 +87,6 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD validate_update_order.
-
-    rv_valid = abap_true.
-
-    IF iv_status_original <> c_valid_st_pe.
-      rv_valid = abap_false.
-      EXIT.
-    ENDIF.
-
-    IF NOT me->validate_status_and_priority( iv_status   = iv_status
-                                             iv_priority = iv_priority ).
-      rv_valid = abap_false.
-      EXIT.
-    ENDIF.
-
-  ENDMETHOD.
-
-
 
   METHOD validate_delete_order.
 
@@ -103,7 +104,6 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 
 
   METHOD validate_status_and_priority.
@@ -139,20 +139,20 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD validate_authority.
+  METHOD validate_update_order.
 
-    AUTHORITY-CHECK OBJECT 'ZAO_WO'
-    ID 'ZAF_WO' FIELD iv_work_order_id
-    ID 'ACTVT'  FIELD iv_actvt.
+    rv_valid = abap_true.
 
-    IF sy-subrc EQ 0.
-      rv_valid = abap_true.
+    IF iv_status_original <> c_valid_st_pe.
+      rv_valid = abap_false.
       EXIT.
-    ELSE.
+    ENDIF.
+
+    IF NOT me->validate_status_and_priority( iv_status   = iv_status
+                                             iv_priority = iv_priority ).
       rv_valid = abap_false.
       EXIT.
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.

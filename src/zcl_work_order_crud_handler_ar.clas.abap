@@ -12,7 +12,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
+CLASS ZCL_WORK_ORDER_CRUD_HANDLER_AR IMPLEMENTATION.
 
 
   METHOD if_oo_adt_classrun~main.

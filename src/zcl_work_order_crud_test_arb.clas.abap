@@ -12,12 +12,9 @@ ENDCLASS.
 
 
 
-CLASS zcl_work_order_crud_test_arb IMPLEMENTATION.
+CLASS ZCL_WORK_ORDER_CRUD_TEST_ARB IMPLEMENTATION.
 
 
   METHOD if_oo_adt_classrun~main.
   ENDMETHOD.
-
-
-
 ENDCLASS.
