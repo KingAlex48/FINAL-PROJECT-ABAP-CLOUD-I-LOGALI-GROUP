@@ -33,25 +33,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_WORK_ORDER_VALIDATOR_ARB IMPLEMENTATION.
-
-
-  METHOD validate_authority.
-
-    AUTHORITY-CHECK OBJECT 'ZAO_WO'
-    ID 'ZAF_WO' FIELD iv_work_order_id
-    ID 'ACTVT'  FIELD iv_actvt.
-
-    IF sy-subrc EQ 0.
-      rv_valid = abap_true.
-      EXIT.
-    ELSE.
-      rv_valid = abap_false.
-      EXIT.
-    ENDIF.
-
-  ENDMETHOD.
-
+CLASS zcl_work_order_validator_arb IMPLEMENTATION.
 
   METHOD validate_create_order.
 
@@ -60,9 +42,9 @@ CLASS ZCL_WORK_ORDER_VALIDATOR_ARB IMPLEMENTATION.
     SELECT SINGLE FROM ztarb_customer
            FIELDS @abap_true
            WHERE customer_id = @iv_customer_id
-           INTO @DATA(lv_cust_valid).
+           INTO @DATA(lv_customer_valid).
 
-    IF lv_cust_valid <> abap_true.
+    IF lv_customer_valid <> abap_true.
       rv_valid = abap_false.
       EXIT.
     ENDIF.
@@ -87,6 +69,24 @@ CLASS ZCL_WORK_ORDER_VALIDATOR_ARB IMPLEMENTATION.
 
   ENDMETHOD.
 
+ METHOD validate_update_order.
+
+    rv_valid = abap_true.
+
+    IF iv_status_original <> c_valid_st_pe.
+      rv_valid = abap_false.
+      EXIT.
+    ENDIF.
+
+    IF NOT me->validate_status_and_priority( iv_status   = iv_status
+                                             iv_priority = iv_priority ).
+      rv_valid = abap_false.
+      EXIT.
+    ENDIF.
+
+  ENDMETHOD.
+
+
 
   METHOD validate_delete_order.
 
@@ -95,7 +95,7 @@ CLASS ZCL_WORK_ORDER_VALIDATOR_ARB IMPLEMENTATION.
     SELECT SINGLE FROM ztarb_wo_hist
            FIELDS @abap_true
            WHERE work_order_id = @iv_work_order_id
-           AND change_description NE 'ACTUALIZADO'
+           AND change_description NE 'UPDATED'
            INTO @DATA(lv_wo_exists).
 
     IF iv_status <> c_valid_st_pe OR lv_wo_exists <> abap_true.
@@ -139,20 +139,23 @@ CLASS ZCL_WORK_ORDER_VALIDATOR_ARB IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD validate_update_order.
 
-    rv_valid = abap_true.
 
-    IF iv_status_original <> c_valid_st_pe.
-      rv_valid = abap_false.
+  METHOD validate_authority.
+
+    AUTHORITY-CHECK OBJECT 'ZAO_WO'
+    ID 'ZAF_WO' FIELD iv_work_order_id
+    ID 'ACTVT'  FIELD iv_actvt.
+
+    IF sy-subrc EQ 0.
+      rv_valid = abap_true.
       EXIT.
-    ENDIF.
-
-    IF NOT me->validate_status_and_priority( iv_status   = iv_status
-                                             iv_priority = iv_priority ).
+    ELSE.
       rv_valid = abap_false.
       EXIT.
     ENDIF.
 
   ENDMETHOD.
+
+
 ENDCLASS.
