@@ -13,6 +13,7 @@ CLASS zcl_work_order_validator_arb DEFINITION
       validate_update_order IMPORTING iv_status          TYPE zde_status_code_arb
                                       iv_priority        TYPE zde_priority_code_arb
                                       iv_status_original TYPE zde_status_code_arb
+                                      iv_work_order_id   TYPE zde_work_orderid_arb
                             RETURNING VALUE(rv_valid)    TYPE abap_bool,
       validate_delete_order IMPORTING iv_work_order_id TYPE zde_work_orderid_arb
                                       iv_status        TYPE zde_status_code_arb
@@ -38,6 +39,14 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
   METHOD validate_create_order.
 
     rv_valid = abap_true.
+
+    IF iv_customer_id IS INITIAL OR iv_technician_id IS INITIAL OR iv_priority IS INITIAL.
+      rv_valid = abap_false.
+    ENDIF.
+
+    IF iv_customer_id EQ '' OR iv_technician_id EQ '' OR iv_priority EQ ''.
+      rv_valid = abap_false.
+    ENDIF.
 
     SELECT SINGLE FROM ztarb_customer
            FIELDS @abap_true
@@ -69,9 +78,27 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
 
   ENDMETHOD.
 
- METHOD validate_update_order.
+  METHOD validate_update_order.
 
     rv_valid = abap_true.
+
+    IF iv_work_order_id IS INITIAL.
+      rv_valid = abap_false.
+      EXIT.
+    ENDIF.
+
+    IF iv_work_order_id IS NOT INITIAL
+    AND iv_work_order_id <> ''.
+      SELECT SINGLE FROM ztarb_work_order
+             FIELDS @abap_true
+             WHERE work_order_id = @iv_work_order_id
+             INTO @DATA(lv_wo_id_valid).
+    ENDIF.
+
+    IF lv_wo_id_valid <> abap_true.
+      rv_valid = abap_false.
+      EXIT.
+    ENDIF.
 
     IF iv_status_original <> c_valid_st_pe.
       rv_valid = abap_false.
@@ -92,11 +119,20 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
 
     rv_valid = abap_true.
 
-    SELECT SINGLE FROM ztarb_wo_hist
-           FIELDS @abap_true
-           WHERE work_order_id = @iv_work_order_id
-           AND change_description NE 'UPDATED'
-           INTO @DATA(lv_wo_exists).
+
+    IF iv_work_order_id IS INITIAL.
+      rv_valid = abap_false.
+      EXIT.
+    ENDIF.
+
+    IF iv_work_order_id IS NOT INITIAL
+    AND iv_work_order_id <> ''.
+      SELECT SINGLE FROM ztarb_wo_hist
+             FIELDS @abap_true
+             WHERE work_order_id = @iv_work_order_id
+             AND change_description NE 'UPDATED'
+             INTO @DATA(lv_wo_exists).
+    ENDIF.
 
     IF iv_status <> c_valid_st_pe OR lv_wo_exists <> abap_true.
       rv_valid = abap_false.
@@ -109,6 +145,12 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
   METHOD validate_status_and_priority.
 
     rv_valid = abap_true.
+
+    IF iv_status IS INITIAL OR iv_priority IS INITIAL.
+      rv_valid = abap_false.
+      EXIT.
+    ENDIF.
+
 
     IF iv_status IS NOT INITIAL
     AND iv_status <> ''.
