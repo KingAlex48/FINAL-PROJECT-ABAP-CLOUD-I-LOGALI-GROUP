@@ -15,7 +15,7 @@ CLASS zcl_work_order_crud_handler_ar DEFINITION
       update_work_order IMPORTING it_ztwo_arb_update TYPE ztt_work_order_arb
                         EXPORTING et_ztwo_update     TYPE ztt_wo_error_arb,
       delete_work_order IMPORTING it_ztwo_arb_delete   TYPE ztt_work_order_arb
-                        EXPORTING et_ztwork_arb_delete TYPE ztt_wo_error_arb,
+                        EXPORTING et_ztwo_arb_delete TYPE ztt_wo_error_arb,
       create_work_order_hist IMPORTING iv_work_order  TYPE zde_work_orderid_arb
                                        iv_change_desc TYPE zde_change_desc_arb.
 
@@ -248,7 +248,7 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
 
         MOVE-CORRESPONDING <fs_ztwo_del_aux_arb> TO ls_zswork_order_arb_error.
         ls_zswork_order_arb_error-message = 'Not authorized to delete'.
-        APPEND ls_zswork_order_arb_error TO et_ztwork_arb_delete.
+        APPEND ls_zswork_order_arb_error TO et_ztwo_arb_delete.
         CONTINUE.
       ENDIF.
 
@@ -270,35 +270,35 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
           SELECT SINGLE FROM ztarb_work_order
                  FIELDS *
                  WHERE work_order_id EQ @<fs_ztwo_del_aux_arb>-work_order_id
-                 INTO @DATA(ls_zswork_order_arb).
+                 INTO @DATA(ls_ztwork_order_arb).
 
 
           IF lo_validator_delete->validate_delete_order( iv_work_order_id =
-          ls_zswork_order_arb-work_order_id
+          ls_ztwork_order_arb-work_order_id
           iv_status =
-          ls_zswork_order_arb-status ) = abap_false.
+          ls_ztwork_order_arb-status ) = abap_false.
 
             MOVE-CORRESPONDING <fs_ztwo_del_aux_arb> TO ls_zswork_order_arb_error.
             ls_zswork_order_arb_error-message = 'Invalid Status'.
-            APPEND ls_zswork_order_arb_error TO et_ztwork_arb_delete.
+            APPEND ls_zswork_order_arb_error TO et_ztwo_arb_delete.
             CONTINUE.
           ENDIF.
 
-          DELETE ztarb_customer FROM @ls_zswork_order_arb.
+          DELETE ztarb_work_order FROM @ls_ztwork_order_arb.
 
           IF sy-subrc NE 0.
             MOVE-CORRESPONDING <fs_ztwo_del_aux_arb> TO ls_zswork_order_arb_error.
             ls_zswork_order_arb_error-message = 'Record not deleted'.
-            APPEND ls_zswork_order_arb_error TO et_ztwork_arb_delete .
+            APPEND ls_zswork_order_arb_error TO et_ztwo_arb_delete .
             CONTINUE.
           ENDIF.
-          me->create_work_order_hist( iv_work_order = ls_zswork_order_arb-work_order_id
+          me->create_work_order_hist( iv_work_order = ls_ztwork_order_arb-work_order_id
                                                        iv_change_desc = 'DELETED' ).
 
-        CATCH cx_abap_foreign_lock.
+        CATCH cx_abap_foreign_lock cx_abap_lock_failure.
           MOVE-CORRESPONDING <fs_ztwo_del_aux_arb> TO ls_zswork_order_arb_error.
-          ls_zswork_order_arb_error-message = 'Work order_id bloqueado'.
-          APPEND ls_zswork_order_arb_error TO et_ztwork_arb_delete .
+          ls_zswork_order_arb_error-message = 'Work order ID locked'.
+          APPEND ls_zswork_order_arb_error TO et_ztwo_arb_delete .
           CONTINUE.
       ENDTRY.
       TRY.
