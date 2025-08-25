@@ -14,7 +14,7 @@ CLASS zcl_work_order_crud_handler_ar DEFINITION
                         EXPORTING et_read_wo_arb   TYPE ztt_wo_error_arb,
       update_work_order IMPORTING it_ztwo_arb_update TYPE ztt_work_order_arb
                         EXPORTING et_ztwo_update     TYPE ztt_wo_error_arb,
-      delete_work_order IMPORTING it_ztwo_arb_delete   TYPE ztt_work_order_arb
+      delete_work_order IMPORTING it_ztwo_arb_delete TYPE ztt_work_order_arb
                         EXPORTING et_ztwo_arb_delete TYPE ztt_wo_error_arb,
       create_work_order_hist IMPORTING iv_work_order  TYPE zde_work_orderid_arb
                                        iv_change_desc TYPE zde_change_desc_arb.
@@ -23,11 +23,24 @@ CLASS zcl_work_order_crud_handler_ar DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS: c_valid_st_pe  TYPE c LENGTH 2 VALUE 'PE'.
+    CONSTANTS: c_valid_st_pe     TYPE c LENGTH 2 VALUE 'PE',
+               c_msg_no_auth_cre TYPE string VALUE  'Not authorized to create',
+               c_msg_no_auth_dis TYPE string VALUE  'Not authorized to display',
+               c_msg_no_auth_cha TYPE string VALUE 'Not authorized to change',
+               c_msg_no_auth_del TYPE string VALUE 'Not authorized to delete',
+               c_msg_inv_ctp     TYPE string VALUE  'Invalid customer ID, technician ID or priority',
+               c_msg_inv_sop     TYPE string VALUE 'Invalid Status or Priority',
+               c_msg_inv_sta     TYPE string VALUE 'Invalid Status',
+               c_msg_not_created TYPE string VALUE  'Record not created',
+               c_msg_rec_no_chan TYPE string VALUE 'Record not changed',
+               c_msg_rec_no_del  TYPE string VALUE 'Record not deleted',
+               c_msg_wo_block    TYPE string VALUE 'Work order ID locked',
+               c_msg_created     TYPE c LENGTH 50 VALUE   'CREATED',
+               c_msg_updated     TYPE c LENGTH 50 VALUE  'UPDATED',
+               c_msg_deleted     TYPE c LENGTH 50 VALUE 'DELETED'.
+
 
 ENDCLASS.
-
-
 
 CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
 
@@ -44,9 +57,9 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
       IF lo_validator->validate_authority( iv_work_order_id =
          <fs_ztwork_order_arb_aux>-work_order_id
           iv_actvt = '01' ) = abap_false.
-        ls_zswork_order_arb_error-message = 'Not authorized to create'.
+        ls_zswork_order_arb_error-message = c_msg_no_auth_cre .
         APPEND ls_zswork_order_arb_error TO et_ztwork_order_arb_error.
-        EXIT.
+        CONTINUE.
       ENDIF.
 
       SELECT FROM ztarb_work_order
@@ -61,7 +74,7 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
                                                 iv_priority =      <fs_ztwork_order_arb_aux>-priority ) = abap_false.
 
         MOVE-CORRESPONDING <fs_ztwork_order_arb_aux> TO ls_zswork_order_arb_error.
-        ls_zswork_order_arb_error-message = 'Invalid customer ID, technician ID or priority'.
+        ls_zswork_order_arb_error-message = c_msg_inv_ctp.
         APPEND ls_zswork_order_arb_error TO et_ztwork_order_arb_error.
         CONTINUE.
       ENDIF.
@@ -69,11 +82,11 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
       INSERT ztarb_work_order FROM @<fs_ztwork_order_arb_aux>.
       IF sy-subrc EQ 0.
         me->create_work_order_hist( iv_work_order = <fs_ztwork_order_arb_aux>-work_order_id
-        iv_change_desc = 'CREATED' ).
+        iv_change_desc = c_msg_created ).
 
       ELSE.
         MOVE-CORRESPONDING <fs_ztwork_order_arb_aux> TO ls_zswork_order_arb_error.
-        ls_zswork_order_arb_error-message = 'Record not created'.
+        ls_zswork_order_arb_error-message = c_msg_not_created .
         APPEND ls_zswork_order_arb_error TO et_ztwork_order_arb_error.
       ENDIF.
 
@@ -90,7 +103,7 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
 
     IF lo_validator->validate_authority( iv_work_order_id  = iv_work_order
                                           iv_actvt = '03' ) = abap_false.
-      ls_zswork_order_arb_error-message = 'Not authorized to display'.
+      ls_zswork_order_arb_error-message =  c_msg_no_auth_dis .
       APPEND ls_zswork_order_arb_error TO et_read_wo_arb .
       EXIT.
     ENDIF.
@@ -153,7 +166,7 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
       iv_actvt = '02' ) = abap_false.
 
         MOVE-CORRESPONDING <fs_ztwo_update_aux_arb> TO ls_zswork_order_arb_error.
-        ls_zswork_order_arb_error-message = 'Not authorized to change'.
+        ls_zswork_order_arb_error-message = c_msg_no_auth_cha .
         APPEND ls_zswork_order_arb_error TO et_ztwo_update.
         CONTINUE.
       ENDIF.
@@ -180,20 +193,21 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
                  INTO @DATA(ls_zswork_order_arb).
 
 
-          IF lo_validator_update->validate_update_order( iv_status_original =
-          ls_zswork_order_arb-status
+          IF lo_validator_update->validate_update_order(
+          iv_work_order_id = ls_zswork_order_arb-work_order_id
+          iv_status_original = ls_zswork_order_arb-status
           iv_status = <fs_ztwo_update_aux_arb>-status
           iv_priority = <fs_ztwo_update_aux_arb>-priority ) = abap_false.
 
             MOVE-CORRESPONDING <fs_ztwo_update_aux_arb> TO ls_zswork_order_arb_error.
-            ls_zswork_order_arb_error-message = 'Invalid Status or Priority" '.
+            ls_zswork_order_arb_error-message = c_msg_inv_sop .
             APPEND ls_zswork_order_arb_error TO et_ztwo_update.
             CONTINUE.
           ENDIF.
 
           IF <fs_ztwo_update_aux_arb>-status IS NOT INITIAL
          AND <fs_ztwo_update_aux_arb>-status <> ''.
-            ls_zswork_order_arb-priority = <fs_ztwo_update_aux_arb>-status.
+            ls_zswork_order_arb-status = <fs_ztwo_update_aux_arb>-status.
           ENDIF.
 
 
@@ -206,17 +220,17 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
 
           IF sy-subrc NE 0.
             MOVE-CORRESPONDING <fs_ztwo_update_aux_arb> TO ls_zswork_order_arb_error.
-            ls_zswork_order_arb_error-message = 'Record not changed'.
+            ls_zswork_order_arb_error-message =   c_msg_rec_no_chan  .
             APPEND ls_zswork_order_arb_error TO et_ztwo_update.
             CONTINUE.
           ENDIF.
 
           me->create_work_order_hist( iv_work_order = ls_zswork_order_arb-work_order_id
-                                       iv_change_desc = 'UPDATED' ).
+                                       iv_change_desc = c_msg_updated ).
 
         CATCH cx_abap_foreign_lock cx_abap_lock_failure.
           MOVE-CORRESPONDING <fs_ztwo_update_aux_arb> TO ls_zswork_order_arb_error.
-          ls_zswork_order_arb_error-message = 'Work order id bloqueado '.
+          ls_zswork_order_arb_error-message =  c_msg_wo_block.
           APPEND ls_zswork_order_arb_error TO et_ztwo_update.
           CONTINUE.
       ENDTRY.
@@ -247,7 +261,7 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
       iv_actvt = '06' ) = abap_false.
 
         MOVE-CORRESPONDING <fs_ztwo_del_aux_arb> TO ls_zswork_order_arb_error.
-        ls_zswork_order_arb_error-message = 'Not authorized to delete'.
+        ls_zswork_order_arb_error-message = c_msg_no_auth_del.
         APPEND ls_zswork_order_arb_error TO et_ztwo_arb_delete.
         CONTINUE.
       ENDIF.
@@ -279,7 +293,7 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
           ls_ztwork_order_arb-status ) = abap_false.
 
             MOVE-CORRESPONDING <fs_ztwo_del_aux_arb> TO ls_zswork_order_arb_error.
-            ls_zswork_order_arb_error-message = 'Invalid Status'.
+            ls_zswork_order_arb_error-message = c_msg_inv_sta.
             APPEND ls_zswork_order_arb_error TO et_ztwo_arb_delete.
             CONTINUE.
           ENDIF.
@@ -288,16 +302,16 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
 
           IF sy-subrc NE 0.
             MOVE-CORRESPONDING <fs_ztwo_del_aux_arb> TO ls_zswork_order_arb_error.
-            ls_zswork_order_arb_error-message = 'Record not deleted'.
+            ls_zswork_order_arb_error-message = c_msg_rec_no_del .
             APPEND ls_zswork_order_arb_error TO et_ztwo_arb_delete .
             CONTINUE.
           ENDIF.
           me->create_work_order_hist( iv_work_order = ls_ztwork_order_arb-work_order_id
-                                                       iv_change_desc = 'DELETED' ).
+                                                       iv_change_desc = c_msg_deleted  ).
 
         CATCH cx_abap_foreign_lock cx_abap_lock_failure.
           MOVE-CORRESPONDING <fs_ztwo_del_aux_arb> TO ls_zswork_order_arb_error.
-          ls_zswork_order_arb_error-message = 'Work order ID locked'.
+          ls_zswork_order_arb_error-message = c_msg_wo_block .
           APPEND ls_zswork_order_arb_error TO et_ztwo_arb_delete .
           CONTINUE.
       ENDTRY.
