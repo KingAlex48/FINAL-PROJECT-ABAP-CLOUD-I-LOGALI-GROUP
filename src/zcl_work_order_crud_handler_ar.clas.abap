@@ -11,7 +11,7 @@ CLASS zcl_work_order_crud_handler_ar DEFINITION
                                   iv_customer_id   TYPE zde_customer_id_arb  OPTIONAL
                                   iv_status        TYPE zde_status_arb       OPTIONAL
                                   iv_creation_date TYPE zde_modif_date_arb   OPTIONAL
-                        EXPORTING et_read_wo_arb   TYPE ztt_wo_error_arb,
+                        EXPORTING et_read_wo_arb   TYPE ztt_work_order_arb,
       update_work_order IMPORTING it_ztwo_arb_update TYPE ztt_work_order_arb
                         EXPORTING et_ztwo_update     TYPE ztt_wo_error_arb,
       delete_work_order IMPORTING it_ztwo_arb_delete TYPE ztt_work_order_arb
@@ -107,42 +107,50 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
 *      EXIT.
 *    ENDIF.
 
-    IF iv_work_order IS NOT INITIAL
-    AND iv_work_order <> '0000000000'.
-      lv_where_conditions = |work_order_id = { iv_work_order }|.
-    ENDIF.
-
-    IF iv_customer_id IS NOT INITIAL.
-      IF lv_where_conditions IS INITIAL.
-        lv_where_conditions = |customer_id = { iv_customer_id }|.
-      ELSE.
-        lv_where_conditions = |{ lv_where_conditions } and customer_id  = { iv_customer_id }|.
-      ENDIF.
-    ENDIF.
-
-    IF iv_status IS NOT INITIAL.
-      IF lv_where_conditions IS INITIAL.
-        lv_where_conditions = |status = { iv_status }|.
-      ELSE.
-        lv_where_conditions = |{ lv_where_conditions } and status = { iv_status }  |.
-      ENDIF.
-    ENDIF.
-
-    IF iv_creation_date IS NOT INITIAL.
-      IF lv_where_conditions IS INITIAL.
-        lv_where_conditions = |creation_date = { iv_creation_date }|.
-      ELSE.
-        lv_where_conditions = |{ lv_where_conditions } and creation_date = { iv_creation_date }|.
-      ENDIF.
-    ENDIF.
+*    IF iv_work_order IS NOT INITIAL
+*    AND iv_work_order <> '0000000000'.
+*      lv_where_conditions = |work_order_id = { iv_work_order }|.
+*    ENDIF.
+*
+*    IF iv_customer_id IS NOT INITIAL.
+*      IF lv_where_conditions IS INITIAL.
+*        lv_where_conditions = |customer_id = { iv_customer_id }|.
+*      ELSE.
+*        lv_where_conditions = |{ lv_where_conditions } and customer_id  = { iv_customer_id }|.
+*      ENDIF.
+*    ENDIF.
+*
+*    IF iv_status IS NOT INITIAL.
+*      IF lv_where_conditions IS INITIAL.
+*        lv_where_conditions = |status = { iv_status }|.
+*      ELSE.
+*        lv_where_conditions = |{ lv_where_conditions } and status = { iv_status }  |.
+*      ENDIF.
+*    ENDIF.
+*
+*    IF iv_creation_date IS NOT INITIAL.
+*      IF lv_where_conditions IS INITIAL.
+*        lv_where_conditions = |creation_date = { iv_creation_date }|.
+*      ELSE.
+*        lv_where_conditions = |{ lv_where_conditions } and creation_date = { iv_creation_date }|.
+*      ENDIF.
+*    ENDIF.
+*
+*    TRY.
+*
+*        SELECT FROM ztarb_work_order
+*               FIELDS *
+*               WHERE (lv_where_conditions)
+*               INTO TABLE @DATA(lt_read_work_order).
 
     TRY.
-
-        SELECT FROM ztarb_work_order
-               FIELDS *
-               WHERE (lv_where_conditions)
-               INTO TABLE @DATA(lt_read_work_order).
-
+        SELECT *
+          FROM ztarb_work_order
+          WHERE ( work_order_id    IS INITIAL OR work_order_id   = @iv_work_order )
+            AND ( customer_id   IS INITIAL OR customer_id     = @iv_customer_id )
+            AND ( status        IS INITIAL OR status          = @iv_status )
+            AND ( creation_date IS INITIAL OR creation_date   = @iv_creation_date )
+                 INTO TABLE @et_read_wo_arb.
 
       CATCH cx_sy_dynamic_osql_syntax
             cx_sy_dynamic_osql_semantics
