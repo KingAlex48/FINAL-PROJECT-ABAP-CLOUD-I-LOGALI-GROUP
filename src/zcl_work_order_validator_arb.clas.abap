@@ -68,7 +68,7 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
       EXIT.
     ENDIF.
 
-    IF NOT me->validate_status_and_priority( iv_status   = ' '
+    IF NOT me->validate_status_and_priority( iv_status   = c_valid_st_pe
                                              iv_priority = iv_priority ).
       rv_valid = abap_false.
       EXIT.
@@ -185,17 +185,17 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
 
   METHOD validate_authority.
 
-    AUTHORITY-CHECK OBJECT 'ZAO_WO'
-    ID 'ZAF_WO' FIELD iv_work_order_id
-    ID 'ACTVT'  FIELD iv_actvt.
-
-    IF sy-subrc EQ 0.
-      rv_valid = abap_true.
-      EXIT.
-    ELSE.
-      rv_valid = abap_false.
-      EXIT.
-    ENDIF.
+*    AUTHORITY-CHECK OBJECT 'ZAO_WO'
+*    ID 'ZAF_WO' FIELD iv_work_order_id
+*    ID 'ACTVT'  FIELD iv_actvt.
+*
+*    IF sy-subrc EQ 0.
+*      rv_valid = abap_true.
+*      EXIT.
+*    ELSE.
+*      rv_valid = abap_false.
+*      EXIT.
+*    ENDIF.
 
   ENDMETHOD.
 
