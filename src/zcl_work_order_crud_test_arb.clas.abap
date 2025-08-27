@@ -11,8 +11,6 @@
        test_update_work_order EXPORTING et_zt_work_order_arb_update TYPE ztt_wo_error_arb,
        test_delete_work_order EXPORTING et_ztwork_order_arb_delete  TYPE ztt_wo_error_arb.
 
-
-
      INTERFACES if_oo_adt_classrun .
    PROTECTED SECTION.
    PRIVATE SECTION.
@@ -27,58 +25,51 @@
      DATA(lo_work_order) = NEW zcl_work_order_crud_handler_ar( ).
 
 
-     DATA(lt_ztwork_order_arb) = VALUE ztt_work_order_arb( (
-                                                           customer_id = '00000003'
+     DATA(lt_ztwork_order_arb) = VALUE ztt_work_order_arb( ( customer_id = '00000003'
                                                            technician_id = '0000002C'
                                                            creation_date = '20250803'
                                                            status = 'PE'
                                                            priority = 'A'
-                                                           description = 'Update firewall rules for SAP connections' )
-                                                         (
-                                                           customer_id = '00000008'
+                                             description = 'Update firewall rules for SAP connections' )
+                                                         ( customer_id = '00000008'
                                                            technician_id = '0000003A'
                                                            creation_date = '20250804'
                                                            status = 'PE'
                                                            priority = 'B'
-                                                           description = 'Fix bug in custom Z-report' )
-                                                         (
-                                                           customer_id = '00000005'
+                                             description = 'Fix bug in custom Z-report' )
+                                                         ( customer_id = '00000005'
                                                            technician_id = '0000002A'
                                                            creation_date = '20250805'
                                                            status = 'PE'
                                                            priority = 'C'
-                                                           description = 'Enhance sales order interface' )
-                                                         (
-                                                           customer_id = '00000002'
+                                              description = 'Enhance sales order interface' )
+                                                         ( customer_id = '00000002'
                                                            technician_id = '0000001B'
                                                            creation_date = '20250806'
                                                            status = 'PE'
                                                            priority = 'A'
-                                                           description = 'Backup and restore SAP HANA database' )
-                                                           (
-                                                           customer_id = '00000004'
+                                              description = 'Backup and restore SAP HANA database' )
+                                                           ( customer_id = '00000004'
                                                            technician_id = '0000001C'
                                                            creation_date = '20250807'
                                                            status = 'CO'
                                                            priority = 'B'
-                                                           description = 'Patch vulnerability in SAP application server' )
-                                                           (
-                                                           customer_id = '00000001'
+                                             description = 'Patch vulnerability in SAP application server' )
+                                                           ( customer_id = '00000001'
                                                            technician_id = '0000002C'
                                                            creation_date = '20250801'
                                                            status = 'PE'
                                                            priority = 'A'
-                                                           description = 'Configure user role authorization in SAP' )
-                                                         (
-                                                           customer_id = '00000002'
+                                              description = 'Configure user role authorization in SAP' )
+                                                         ( customer_id = '00000002'
                                                            technician_id = '00000060'
                                                            creation_date = '20250802'
                                                            status = 'PE'
                                                            priority = 'A'
-                                                           description = 'Optimize slow queries in production system' ) ).
+                                             description = 'Optimize slow queries in production system' ) ).
 
      lo_work_order->create_work_order(  EXPORTING it_ztwork_order_arb = lt_ztwork_order_arb
-                                        IMPORTING et_ztwork_order_arb_error = DATA(lt_ztwork_order_arb_error) ).
+                                    IMPORTING et_ztwork_order_arb_error = DATA(lt_ztwork_order_arb_error) ).
 
      et_ztwork_order_arb_error = lt_ztwork_order_arb_error.
 
@@ -159,7 +150,7 @@
                                                                    (  work_order_id = '0000000004' ) ).
 
      lo_test_delete_work_order->delete_work_order( EXPORTING it_ztwo_arb_delete = lt_ztwork_order_arb_delete
-                                                   IMPORTING et_ztwo_arb_delete = DATA(lt_ztwork_order_delete) ).
+                                              IMPORTING et_ztwo_arb_delete = DATA(lt_ztwork_order_delete) ).
      et_ztwork_order_arb_delete  = lt_ztwork_order_delete.
 
 

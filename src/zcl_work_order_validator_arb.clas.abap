@@ -2,9 +2,7 @@ CLASS zcl_work_order_validator_arb DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
-
   PUBLIC SECTION.
-
     METHODS:
       validate_create_order IMPORTING iv_customer_id   TYPE zde_customer_id_arb
                                       iv_technician_id TYPE zde_technician_id_arb
@@ -24,18 +22,14 @@ CLASS zcl_work_order_validator_arb DEFINITION
       validate_authority  IMPORTING iv_work_order_id TYPE zde_work_orderid_arb
                                     iv_actvt         TYPE c
                           RETURNING VALUE(rv_valid)  TYPE abap_bool.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
-
     CONSTANTS: c_valid_st_pe  TYPE c LENGTH 2 VALUE 'PE'.
-
 ENDCLASS.
 
 
 
 CLASS zcl_work_order_validator_arb IMPLEMENTATION.
-
   METHOD validate_create_order.
 
     rv_valid = abap_true.
@@ -74,12 +68,9 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
       EXIT.
     ENDIF.
 
-
-
   ENDMETHOD.
 
   METHOD validate_update_order.
-
     rv_valid = abap_true.
 
     IF iv_work_order_id IS INITIAL.
@@ -110,7 +101,6 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
       rv_valid = abap_false.
       EXIT.
     ENDIF.
-
   ENDMETHOD.
 
 
@@ -167,11 +157,11 @@ CLASS zcl_work_order_validator_arb IMPLEMENTATION.
 
     IF iv_priority IS NOT INITIAL
         AND iv_priority <> ''.
+
       SELECT SINGLE FROM ztarb_priority
              FIELDS @abap_true
              WHERE priority_code = @iv_priority
              INTO @DATA(lv_prior_valid).
-
       IF lv_prior_valid <> abap_true.
         rv_valid = abap_false.
         EXIT.

@@ -7,18 +7,18 @@ CLASS zcl_work_order_crud_handler_ar DEFINITION
 
     METHODS: create_work_order IMPORTING it_ztwork_order_arb       TYPE ztt_work_order_arb
                                EXPORTING et_ztwork_order_arb_error TYPE ztt_wo_error_arb ,
-      read_work_order   IMPORTING iv_work_order    TYPE zde_work_orderid_arb OPTIONAL
-                                  iv_customer_id   TYPE zde_customer_id_arb  OPTIONAL
-                                  iv_status        TYPE zde_status_arb       OPTIONAL
-                                  iv_creation_date TYPE zde_modif_date_arb   OPTIONAL
-                        EXPORTING et_read_wo_arb   TYPE ztt_work_order_arb,
+      read_work_order   IMPORTING iv_work_order        TYPE zde_work_orderid_arb OPTIONAL
+                                  iv_customer_id       TYPE zde_customer_id_arb  OPTIONAL
+                                  iv_status            TYPE zde_status_arb       OPTIONAL
+                                  iv_creation_date     TYPE zde_modif_date_arb   OPTIONAL
+                        EXPORTING et_read_wo_arb       TYPE ztt_work_order_arb
+                                  et_read_wo_error_arb TYPE ztt_wo_error_arb,
       update_work_order IMPORTING it_ztwo_arb_update TYPE ztt_work_order_arb
                         EXPORTING et_ztwo_update     TYPE ztt_wo_error_arb,
       delete_work_order IMPORTING it_ztwo_arb_delete TYPE ztt_work_order_arb
                         EXPORTING et_ztwo_arb_delete TYPE ztt_wo_error_arb,
       create_work_order_hist IMPORTING iv_work_order  TYPE zde_work_orderid_arb
                                        iv_change_desc TYPE zde_change_desc_arb.
-
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -44,23 +44,20 @@ ENDCLASS.
 
 CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
 
-
   METHOD create_work_order .
-
     DATA(lo_validator) = NEW zcl_work_order_validator_arb(  ).
     DATA(lt_ztwork_order_arb_aux) = it_ztwork_order_arb .
     DATA ls_zswork_order_arb_error TYPE zsarb_wo_error .
 
     LOOP AT lt_ztwork_order_arb_aux ASSIGNING FIELD-SYMBOL(<fs_ztwork_order_arb_aux>).
 
-*
-*      IF lo_validator->validate_authority( iv_work_order_id =
-*         <fs_ztwork_order_arb_aux>-work_order_id
-*          iv_actvt = '01' ) = abap_false.
-*        ls_zswork_order_arb_error-message = c_msg_no_auth_cre .
-*        APPEND ls_zswork_order_arb_error TO et_ztwork_order_arb_error.
-*        CONTINUE.
-*      ENDIF.
+      IF lo_validator->validate_authority( iv_work_order_id =
+         <fs_ztwork_order_arb_aux>-work_order_id
+          iv_actvt = '01' ) = abap_false.
+        ls_zswork_order_arb_error-message = c_msg_no_auth_cre .
+        APPEND ls_zswork_order_arb_error TO et_ztwork_order_arb_error.
+        CONTINUE.
+      ENDIF.
 
       SELECT FROM ztarb_work_order
       FIELDS MAX(  work_order_id )
@@ -68,9 +65,10 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
       <fs_ztwork_order_arb_aux>-client = sy-mandt.
       <fs_ztwork_order_arb_aux>-work_order_id = lv_last_work_order_id + 1.
 
-      IF lo_validator->validate_create_order(   iv_customer_id =   <fs_ztwork_order_arb_aux>-customer_id
-                                                iv_technician_id = <fs_ztwork_order_arb_aux>-technician_id
-                                                iv_priority =      <fs_ztwork_order_arb_aux>-priority ) = abap_false.
+      IF lo_validator->validate_create_order(  iv_customer_id =   <fs_ztwork_order_arb_aux>-customer_id
+                                               iv_technician_id = <fs_ztwork_order_arb_aux>-technician_id
+                                               iv_priority =      <fs_ztwork_order_arb_aux>-priority )
+                                               = abap_false.
 
         MOVE-CORRESPONDING <fs_ztwork_order_arb_aux> TO ls_zswork_order_arb_error.
         ls_zswork_order_arb_error-message = c_msg_inv_ctp.
@@ -100,48 +98,13 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
     DATA(lo_validator) = NEW zcl_work_order_validator_arb(  ).
     DATA ls_zswork_order_arb_error TYPE zsarb_wo_error .
 
-*    IF lo_validator->validate_authority( iv_work_order_id  = iv_work_order
-*                                          iv_actvt = '03' ) = abap_false.
-*      ls_zswork_order_arb_error-message =  c_msg_no_auth_dis .
-*      APPEND ls_zswork_order_arb_error TO et_read_wo_arb .
-*      EXIT.
-*    ENDIF.
+    IF lo_validator->validate_authority( iv_work_order_id  = iv_work_order
+                                          iv_actvt = '03' ) = abap_false.
+      ls_zswork_order_arb_error-message =  c_msg_no_auth_dis .
+      APPEND ls_zswork_order_arb_error TO et_read_wo_error_arb .
+      EXIT.
+    ENDIF.
 
-*    IF iv_work_order IS NOT INITIAL
-*    AND iv_work_order <> '0000000000'.
-*      lv_where_conditions = |work_order_id = { iv_work_order }|.
-*    ENDIF.
-*
-*    IF iv_customer_id IS NOT INITIAL.
-*      IF lv_where_conditions IS INITIAL.
-*        lv_where_conditions = |customer_id = { iv_customer_id }|.
-*      ELSE.
-*        lv_where_conditions = |{ lv_where_conditions } and customer_id  = { iv_customer_id }|.
-*      ENDIF.
-*    ENDIF.
-*
-*    IF iv_status IS NOT INITIAL.
-*      IF lv_where_conditions IS INITIAL.
-*        lv_where_conditions = |status = { iv_status }|.
-*      ELSE.
-*        lv_where_conditions = |{ lv_where_conditions } and status = { iv_status }  |.
-*      ENDIF.
-*    ENDIF.
-*
-*    IF iv_creation_date IS NOT INITIAL.
-*      IF lv_where_conditions IS INITIAL.
-*        lv_where_conditions = |creation_date = { iv_creation_date }|.
-*      ELSE.
-*        lv_where_conditions = |{ lv_where_conditions } and creation_date = { iv_creation_date }|.
-*      ENDIF.
-*    ENDIF.
-*
-*    TRY.
-*
-*        SELECT FROM ztarb_work_order
-*               FIELDS *
-*               WHERE (lv_where_conditions)
-*               INTO TABLE @DATA(lt_read_work_order).
 
     TRY.
         SELECT *
@@ -168,16 +131,16 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
     DATA ls_zswork_order_arb_error TYPE zsarb_wo_error .
 
     LOOP AT lt_ztwo_update_aux_arb ASSIGNING FIELD-SYMBOL(<fs_ztwo_update_aux_arb>).
-*
-*      IF lo_validator_update->validate_authority( iv_work_order_id  =
-*      <fs_ztwo_update_aux_arb>-work_order_id
-*      iv_actvt = '02' ) = abap_false.
-*
-*        MOVE-CORRESPONDING <fs_ztwo_update_aux_arb> TO ls_zswork_order_arb_error.
-*        ls_zswork_order_arb_error-message = c_msg_no_auth_cha .
-*        APPEND ls_zswork_order_arb_error TO et_ztwo_update.
-*        CONTINUE.
-*      ENDIF.
+
+      IF lo_validator_update->validate_authority( iv_work_order_id  =
+      <fs_ztwo_update_aux_arb>-work_order_id
+      iv_actvt = '02' ) = abap_false.
+
+        MOVE-CORRESPONDING <fs_ztwo_update_aux_arb> TO ls_zswork_order_arb_error.
+        ls_zswork_order_arb_error-message = c_msg_no_auth_cha .
+        APPEND ls_zswork_order_arb_error TO et_ztwo_update.
+        CONTINUE.
+      ENDIF.
 
       TRY.
           DATA(lo_lock_object) = cl_abap_lock_object_factory=>get_instance( EXPORTING
@@ -191,7 +154,6 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
 
       lt_parameter = VALUE #( ( name = 'work_order_id'
                                 value = REF #( <fs_ztwo_update_aux_arb>-work_order_id ) ) ).
-
       TRY.
           lo_lock_object->enqueue( it_parameter = lt_parameter ).
 
@@ -251,7 +213,6 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
 
     ENDLOOP.
 
-
   ENDMETHOD.
 
 
@@ -264,20 +225,19 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
 
     LOOP AT lt_ztwo_del_aux_arb ASSIGNING FIELD-SYMBOL(<fs_ztwo_del_aux_arb>).
 
-*      IF lo_validator_delete->validate_authority( iv_work_order_id  =
-*      <fs_ztwo_del_aux_arb>-work_order_id
-*      iv_actvt = '06' ) = abap_false.
-*
-*        MOVE-CORRESPONDING <fs_ztwo_del_aux_arb> TO ls_zswork_order_arb_error.
-*        ls_zswork_order_arb_error-message = c_msg_no_auth_del.
-*        APPEND ls_zswork_order_arb_error TO et_ztwo_arb_delete.
-*        CONTINUE.
-*      ENDIF.
+      IF lo_validator_delete->validate_authority( iv_work_order_id  =
+      <fs_ztwo_del_aux_arb>-work_order_id
+      iv_actvt = '06' ) = abap_false.
+
+        MOVE-CORRESPONDING <fs_ztwo_del_aux_arb> TO ls_zswork_order_arb_error.
+        ls_zswork_order_arb_error-message = c_msg_no_auth_del.
+        APPEND ls_zswork_order_arb_error TO et_ztwo_arb_delete.
+        CONTINUE.
+      ENDIF.
 
       TRY.
           DATA(lo_lock_object) = cl_abap_lock_object_factory=>get_instance( EXPORTING
           iv_name = 'EZ_WORK_ORDER' ).
-
         CATCH cx_abap_lock_failure.
       ENDTRY.
 
@@ -343,9 +303,7 @@ CLASS zcl_work_order_crud_handler_ar IMPLEMENTATION.
                                          change_description = iv_change_desc ).
     INSERT ztarb_wo_hist FROM @ls_ztwork_arb_hist_aux.
 
-
   ENDMETHOD.
-
 
 
 ENDCLASS.

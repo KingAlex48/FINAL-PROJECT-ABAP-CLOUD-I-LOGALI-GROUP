@@ -84,7 +84,6 @@ CLASS zcl_data_table_arb IMPLEMENTATION.
     ENDIF.
 
 
-
 *    DELETE FROM ztarb_work_order.
 
 
@@ -95,7 +94,6 @@ CLASS zcl_data_table_arb IMPLEMENTATION.
     ENDIF.
 
 
-
 *        DELETE FROM ztarb_wo_hist.
 
     IF sy-subrc EQ 0.
@@ -104,10 +102,7 @@ CLASS zcl_data_table_arb IMPLEMENTATION.
       out->write( | ERROR  Work order history table  | ).
     ENDIF.
 
-
-
   ENDMETHOD.
-
 
 
 ENDCLASS.
